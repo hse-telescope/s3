@@ -13,7 +13,7 @@ import (
 type ItemConfig struct {
 	Bucket    string        `yaml:"bucket"`
 	KeySuffix string        `yaml:"key_suffix"`
-	Expires   time.Duration `yaml:"expires"`
+	TTL       time.Duration `yaml:"ttl"`
 }
 
 // ItemsConfig ...
@@ -30,11 +30,6 @@ type Config struct {
 
 // LoadAwsConfig ...
 func (c *Config) LoadAwsConfig(ctx context.Context) (aws.Config, error) {
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		return aws.Endpoint{
-			URL: c.URL,
-		}, nil
-	})
 	return config.LoadDefaultConfig(ctx,
 		config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
 			Value: aws.Credentials{
@@ -42,7 +37,7 @@ func (c *Config) LoadAwsConfig(ctx context.Context) (aws.Config, error) {
 				SecretAccessKey: c.SecretAccessKey,
 			},
 		}),
-		config.WithEndpointResolverWithOptions(customResolver),
+		config.WithBaseEndpoint(c.URL),
 		config.WithRegion("auto"),
 	)
 }
